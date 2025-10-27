@@ -1,1 +1,1 @@
-"# CSV-GENERATOR." 
+The CSV Generator is a simple and efficient tool designed to create, edit, and export CSV (Comma-Separated Values) files with ease. It allows users to input data manually, import from existing sources, and export properly formatted CSV files for data analysis, reporting, or system integration.
