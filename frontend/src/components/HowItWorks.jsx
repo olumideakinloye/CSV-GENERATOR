@@ -121,10 +121,19 @@ const HowItWorks = ({
 
   const handleButtonClick = (step, e) => {
     e.stopPropagation();
-    if (step.buttonAction) {
-      step.buttonAction(step);
-    } else {
-      alert(`Action triggered: ${step.buttonText}`);
+    if(step.number == "1"){
+      const registerSection = document.getElementById("register");
+      if(registerSection){
+        registerSection.scrollIntoView({behavior: "smooth"});
+      }
+    }else{
+      console.log(step);
+      
+      if (step.buttonAction) {
+        step.buttonAction(step);
+      } else {
+        alert(`Action triggered: ${step.buttonText}`);
+      }
     }
   };
 

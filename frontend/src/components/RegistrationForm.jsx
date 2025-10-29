@@ -20,6 +20,11 @@ const RegistrationForm = ({ onRegistrationComplete }) => {
     return regex.test(email);
   };
 
+  const formatFullName = (fullName)=>{
+    if(!fullName) return ""
+    if(fullName.split(" ").length == 1) return fullName.charAt(0).toUpperCase() + fullName.slice(1)
+    if(fullName.split(" ").length > 1) return `${fullName.split(" ")[0].charAt(0).toUpperCase() + fullName.split(" ")[0].slice(1)} ${fullName.split(" ")[1].charAt(0).toUpperCase() + fullName.split(" ")[1].slice(1)}`
+  }
   // Validate phone
   const validatePhone = (phone) => {
     const regex = /^[0-9]{7,15}$/;
@@ -67,9 +72,14 @@ const RegistrationForm = ({ onRegistrationComplete }) => {
       setTimeout(() => {
         console.log('Registration data:', formData);
         incrementContacts(); // Increase the contact count
+
+        const formattedFormData = {
+          ...formData, 
+          name: formatFullName(formData.name)
+        }
         
         // Move to WhatsApp verification step
-        onRegistrationComplete(formData);
+        onRegistrationComplete(formattedFormData);
         
         setIsSubmitting(false);
       }, 1000);
@@ -77,7 +87,7 @@ const RegistrationForm = ({ onRegistrationComplete }) => {
   };
 
   return (
-    <section className="py-16">
+    <section className="py-16" id="register">
       <div className="container mx-auto px-4">
         <div className="max-w-2xl mx-auto">
           <div className="bg-white rounded-2xl shadow-xl border p-8">
@@ -97,7 +107,7 @@ const RegistrationForm = ({ onRegistrationComplete }) => {
                   value={formData.name}
                   onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="Enter your full name"
+                  placeholder="Enter your full name e.g John Doe"
                 />
                 {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
               </div>
