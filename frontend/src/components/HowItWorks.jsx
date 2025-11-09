@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 const HowItWorks = ({ 
+  onDirectPayment,
   stepsData = null,
   sectionTitle = "How to Connect with Our Community",
   sectionDescription = "Follow these simple steps to participate in our program",
@@ -21,7 +22,6 @@ const HowItWorks = ({
       buttonText: "Register Now",
       color: "purple",
       details: "Registration takes less than 2 minutes. We only require basic information to get you started.",
-      buttonAction: (step) => alert(`Action triggered: ${step.buttonText}`)
     },
     {
       number: "2", 
@@ -31,7 +31,6 @@ const HowItWorks = ({
       buttonText: "📱 WhatsApp",
       color: "green",
       details: "Connect with us on WhatsApp to receive real-time updates and join our community groups.",
-      buttonAction: (step) => alert(`Action triggered: ${step.buttonText}`)
     },
     {
       number: "3",
@@ -41,7 +40,6 @@ const HowItWorks = ({
       buttonText: "Pay ₦1,000",
       color: "blue",
       details: "Gain immediate access to our premium network after payment. New contacts added weekly.",
-      buttonAction: (step) => alert(`Action triggered: ${step.buttonText}`)
     }
   ];
 
@@ -121,19 +119,21 @@ const HowItWorks = ({
 
   const handleButtonClick = (step, e) => {
     e.stopPropagation();
-    if(step.number == "1"){
+    if(step.number == "1" || step.number == "2"){
       const registerSection = document.getElementById("register");
       if(registerSection){
         registerSection.scrollIntoView({behavior: "smooth"});
       }
-    }else{
-      console.log(step);
-      
-      if (step.buttonAction) {
-        step.buttonAction(step);
-      } else {
-        alert(`Action triggered: ${step.buttonText}`);
-      }
+    }else if(step.number == 3){
+      onDirectPayment();
+      setTimeout(() => {      
+      const WorksSection = document.getElementById("direct-payment");
+        if(WorksSection){
+          WorksSection.scrollIntoView({behavior: "smooth"});
+        }else{
+          alert('bad')
+        }
+    }, 100);
     }
   };
 
@@ -193,7 +193,7 @@ const HowItWorks = ({
   };
 
   return (
-    <section ref={sectionRef} className="py-20 bg-gray-50">
+    <section ref={sectionRef} className="py-20 bg-gray-50" id='works'>
       <div className="container mx-auto px-4">
         <div className="max-w-6xl mx-auto">
           

@@ -20,10 +20,10 @@ const RegistrationForm = ({ onRegistrationComplete }) => {
     return regex.test(email);
   };
 
-  const formatFullName = (fullName)=>{
-    if(!fullName) return ""
-    if(fullName.split(" ").length == 1) return fullName.charAt(0).toUpperCase() + fullName.slice(1)
-    if(fullName.split(" ").length > 1) return `${fullName.split(" ")[0].charAt(0).toUpperCase() + fullName.split(" ")[0].slice(1)} ${fullName.split(" ")[1].charAt(0).toUpperCase() + fullName.split(" ")[1].slice(1)}`
+  const formatFullName = (fullName) => {
+    if (!fullName) return ""
+    if (fullName.split(" ").length == 1) return fullName.charAt(0).toUpperCase() + fullName.slice(1)
+    if (fullName.split(" ").length > 1) return `${fullName.split(" ")[0].charAt(0).toUpperCase() + fullName.split(" ")[0].slice(1)} ${fullName.split(" ")[1].charAt(0).toUpperCase() + fullName.split(" ")[1].slice(1)}`
   }
   // Validate phone
   const validatePhone = (phone) => {
@@ -67,20 +67,20 @@ const RegistrationForm = ({ onRegistrationComplete }) => {
     // If no errors, submit form
     if (Object.keys(newErrors).length === 0) {
       setIsSubmitting(true);
-      
+
       // Simulate API call
       setTimeout(() => {
         console.log('Registration data:', formData);
         incrementContacts(); // Increase the contact count
 
         const formattedFormData = {
-          ...formData, 
+          ...formData,
           name: formatFullName(formData.name)
         }
-        
+
         // Move to WhatsApp verification step
         onRegistrationComplete(formattedFormData);
-        
+
         setIsSubmitting(false);
       }, 1000);
     }
