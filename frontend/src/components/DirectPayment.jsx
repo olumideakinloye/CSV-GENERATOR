@@ -2,27 +2,22 @@ import React, { useState, useEffect } from "react";
 import CountrySelector from './CountrySelector';
 
 const PaystackPayment = ({ onBack }) => {
-    const [downloadUrl, setDownloadUrl] = useState(null);
     const publicKey = "pk_test_4696b78b248df5ccee31c7b1a313d8dbfbc8ba1b"; // Replace with your own public key
-    const amount = 5000 * 100; // Amount in Kobo (₦5000)
+    const amount = 1000 * 100; // Amount in Kobo (₦5000)
     const [errors, setErrors] = useState({});
     const [isPaystackReady, setIsPaystackReady] = useState(false);
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState("Make Payment");
     const [formData, setFormData] = useState({
         email: '',
         agreed: false
     });
 
     useEffect(() => {
-        // load Paystack script once
-        if (!window.PaystackPop) {
-            const script = document.createElement("script");
-            script.src = "https://js.paystack.co/v1/inline.js";
-            script.async = true;
-            script.crossOrigin = "anonymous";
-            script.onload = () => setIsPaystackReady(true);
-            script.onerror = (e) => console.error("Failed to load Paystack script:", e);
-            document.body.appendChild(script);
+        if (window.PaystackPop) {
+            console.log("Paystack ready!");
+            setIsPaystackReady(true);
+        } else {
+            console.error("Paystack script NOT found");
         }
     }, []);
 
@@ -31,13 +26,25 @@ const PaystackPayment = ({ onBack }) => {
         return regex.test(email);
     };
 
-    const handleDownload = () => {
-        const link = document.createElement("a");
-        link.href = downloadUrl;
-        link.download = "yourfile.pdf";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+    const handleDownload = async (url) => {
+        setIsSubmitting("Downloading CVS...");
+        try {
+            const res = await fetch("http://localhost:5000" + url); // no credentials
+            if (!res.ok) throw new Error("Network response not OK");
+
+            const blob = await res.blob();
+            const link = document.createElement("a");
+            link.href = window.URL.createObjectURL(blob);
+            link.download = "Untitled.png";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch (err) {
+            console.error("Download failed:", err);
+            alert("Failed to download file. Check server and file URL.");
+            setIsSubmitting("Make Payment");
+        }
+        onBack();
     };
 
     // Async helper for verification
@@ -51,17 +58,23 @@ const PaystackPayment = ({ onBack }) => {
             const data = await res.json();
 
             if (data.success) {
-                setDownloadUrl(data.downloadUrl); // Unlock the download
-                handleDownload()
+                handleDownload(data.downloadUrl)
                 // alert("Payment successful! You can now download the file.");
             } else {
                 alert("Payment verification failed");
             }
         } catch (error) {
+            console.log(error);
+
             alert("Server error verifying payment");
         }
     };
 
+    function paystackCallback(response) {
+        verifyPayment(response.reference).catch(err => {
+            console.error("Error in Paystack callback:", err);
+        });
+    }
     const handlePay = () => {
         if (!window.PaystackPop) {
             alert("Paystack script not loaded yet.");
@@ -78,9 +91,9 @@ const PaystackPayment = ({ onBack }) => {
         }
         try {
             const handler = window.PaystackPop.setup({
-                key: "pk_test_xxxxxxxxxxxxxxxx",
+                key: publicKey,
                 email: formData.email,
-                amount: 1000 * 100,
+                amount: amount,
                 currency: "NGN",
                 metadata: {
                     custom_fields: [
@@ -91,45 +104,42 @@ const PaystackPayment = ({ onBack }) => {
                         },
                     ],
                 },
-                callback: async (response) => {
-                    // Payment successful → verify with server
-                    try {
-                        verifyPayment(response.reference);
-                    } catch (err) {
-                        console.error("Error in Paystack callback:", err);
-                    }
-                },
-                onClose: () => alert("Payment closed."),
+                callback: paystackCallback,
+                onClose: function () { console.log("Payment closed.");  setIsSubmitting("Make Payment"); },
             });
             handler.openIframe();
         } catch (err) {
             console.error("Paystack setup error:", err);
             alert("Unable to initialize payment. Please refresh and try again.");
+            setIsSubmitting("Make Payment");
         }
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
         const newErrors = {};
+        //Ensure user hasen't made any paymnts 
+        if (isSubmitting === "Make Payment") {
 
-        // Validate email
-        if (!formData.email.trim()) {
-            newErrors.email = 'Email address is required';
-        } else if (!validateEmail(formData.email)) {
-            newErrors.email = 'Please enter a valid email address';
-        }
+            // Validate email
+            if (!formData.email.trim()) {
+                newErrors.email = 'Email address is required';
+            } else if (!validateEmail(formData.email)) {
+                newErrors.email = 'Please enter a valid email address';
+            }
 
-        // Validate agreement
-        if (!formData.agreed) {
-            newErrors.agreed = 'Please agree to the Terms and Conditions';
-        }
+            // Validate agreement
+            if (!formData.agreed) {
+                newErrors.agreed = 'Please agree to the Terms and Conditions';
+            }
 
-        setErrors(newErrors);
+            setErrors(newErrors);
 
-        // If no errors, submit form
-        if (Object.keys(newErrors).length === 0) {
-            setIsSubmitting(true);
-            handlePay()
+            // If no errors, submit form
+            if (Object.keys(newErrors).length === 0) {
+                setIsSubmitting(true);
+                handlePay()
+            }
         }
     }
 
@@ -187,13 +197,13 @@ const PaystackPayment = ({ onBack }) => {
                                     // disabled={isSubmitting}
                                     className="w-full bg-purple-600 outline-none hover:bg-purple-700 disabled:bg-gray-400 text-white py-3 px-2 rounded-lg font-semibold transition-colors"
                                 >
-                                    {isSubmitting ? 'Validating...' : 'Make Payment'}
+                                    {isSubmitting === true ? 'Validating...' : isSubmitting}
                                 </button>
 
                                 {/* Back Button */}
                                 <button
                                     onClick={onBack}
-                                    disabled={isSubmitting}
+                                    // disabled={isSubmitting}
                                     className="w-full bg-gray-200 outline-none hover:bg-gray-300 disabled:bg-gray-100 text-gray-700 py-3 px-2 rounded-lg font-medium"
                                 >
                                     ← Back to Registration

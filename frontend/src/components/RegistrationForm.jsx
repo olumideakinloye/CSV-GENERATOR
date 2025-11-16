@@ -31,6 +31,34 @@ const RegistrationForm = ({ onRegistrationComplete }) => {
     return regex.test(phone.replace(/[\s-()]/g, ''));
   };
 
+  //Register user info in database
+  const registerUer = async (userInfo) => {
+    try {
+      const res = await fetch("http://localhost:5000/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userInfo }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        incrementContacts(); // Increase the contact count
+
+
+        // Move to WhatsApp verification step
+        onRegistrationComplete(formData);
+
+        setIsSubmitting(false);
+        // alert("Payment successful! You can now download the file.");
+      } else {
+        alert("Payment verification failed");
+      }
+    } catch (error) {
+      console.log(error);
+
+      alert("Server error verifying payment");
+    }
+  }
   // Handle form submission
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -67,22 +95,25 @@ const RegistrationForm = ({ onRegistrationComplete }) => {
     // If no errors, submit form
     if (Object.keys(newErrors).length === 0) {
       setIsSubmitting(true);
+      const formattedFormData = {
+        name: formatFullName(formData.name),
+        email: formData.email,
+        phone: `${formData.countryCode}${formData.phone}`
+      }
 
       // Simulate API call
-      setTimeout(() => {
-        console.log('Registration data:', formData);
-        incrementContacts(); // Increase the contact count
+      registerUer(formattedFormData);
+      // setTimeout(() => {
+      //   console.log('Registration data:', formattedFormData);
+      //   incrementContacts(); // Increase the contact count
+        
 
-        const formattedFormData = {
-          ...formData,
-          name: formatFullName(formData.name)
-        }
 
-        // Move to WhatsApp verification step
-        onRegistrationComplete(formattedFormData);
+      //   // Move to WhatsApp verification step
+      //   onRegistrationComplete(formattedFormData);
 
-        setIsSubmitting(false);
-      }, 1000);
+      //   setIsSubmitting(false);
+      // }, 1000);
     }
   };
 
