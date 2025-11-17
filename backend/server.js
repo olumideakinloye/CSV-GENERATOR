@@ -2,11 +2,14 @@ const express = require("express");
 const path = require("path");
 const cors = require("cors");
 const mongoose = require("mongoose");
+const dotenv = require("dotenv");
 const User = require("./models/user");
 const app = express();
+
+dotenv.config();
+
 //connnect to database
-const dbURI =
-  "mongodb+srv://balalaika_tv:ak47_Nigeria@cluster0.zekxu4n.mongodb.net/balalaikaTv?retryWrites=true&w=majority&appName=Cluster0";
+const dbURI = process.env.MONGO_URI;
 mongoose
   .connect(dbURI)
   .then((result) => {
@@ -39,7 +42,7 @@ app.post("/register", async (req, res) => {
     });
 });
 
-const PAYSTACK_SECRET_KEY = "sk_test_933055feaa79fb4a7ad5369a71508a83b174688a";
+const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 
 app.post("/verify-payment", async (req, res) => {
   const { reference } = req.body;

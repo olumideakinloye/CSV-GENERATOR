@@ -96,7 +96,6 @@ const Features = ({ onMaskString }) => {
   };
 
   const getList = async () => {
-    alert("good")
     try {
       const res = await fetch("http://localhost:5000/get-list");
 
@@ -109,7 +108,6 @@ const Features = ({ onMaskString }) => {
       setList(list.data);
       console.log(list.data);
 
-      alert("good")
     } catch (error) {
       console.error("Fetch error:", error.message);
     }
