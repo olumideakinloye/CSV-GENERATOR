@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 const HowItWorks = ({ 
-  onDirectPayment,
   stepsData = null,
   sectionTitle = "How to Connect with Our Community",
   sectionDescription = "Follow these simple steps to participate in our program",
@@ -119,21 +118,9 @@ const HowItWorks = ({
 
   const handleButtonClick = (step, e) => {
     e.stopPropagation();
-    if(step.number == "1" || step.number == "2"){
-      const registerSection = document.getElementById("register");
-      if(registerSection){
-        registerSection.scrollIntoView({behavior: "smooth"});
-      }
-    }else if(step.number == 3){
-      onDirectPayment();
-      setTimeout(() => {      
-      const WorksSection = document.getElementById("direct-payment");
-        if(WorksSection){
-          WorksSection.scrollIntoView({behavior: "smooth"});
-        }else{
-          alert('bad')
-        }
-    }, 100);
+    const registerSection = document.getElementById("register");
+    if(registerSection){
+      registerSection.scrollIntoView({behavior: "smooth"});
     }
   };
 

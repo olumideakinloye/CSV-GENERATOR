@@ -27,8 +27,9 @@ const userSchema = new Schema(
       trim: true,
       match: [/^[0-9]{10,15}$/, "Phone number must be 10 to 15 digits"],
     },
+    countryCode: { type: String, required: true },
   },
   { timestamps: true }
 );
-const User = mongoose.model('User', userSchema);
+const User = mongoose.model("User", userSchema);
 module.exports = User;

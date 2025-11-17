@@ -22,8 +22,8 @@ const RegistrationForm = ({ onRegistrationComplete }) => {
 
   const formatFullName = (fullName) => {
     if (!fullName) return ""
-    if (fullName.split(" ").length == 1) return fullName.charAt(0).toUpperCase() + fullName.slice(1)
-    if (fullName.split(" ").length > 1) return `${fullName.split(" ")[0].charAt(0).toUpperCase() + fullName.split(" ")[0].slice(1)} ${fullName.split(" ")[1].charAt(0).toUpperCase() + fullName.split(" ")[1].slice(1)}`
+    if (fullName.split(" ").length == 1) return `BLKTV ${fullName.charAt(0).toUpperCase() + fullName.slice(1)}`
+    if (fullName.split(" ").length > 1) return `BLKTV ${fullName.split(" ")[0].charAt(0).toUpperCase() + fullName.split(" ")[0].slice(1)} ${fullName.split(" ")[1].charAt(0).toUpperCase() + fullName.split(" ")[1].slice(1)}`
   }
   // Validate phone
   const validatePhone = (phone) => {
@@ -37,26 +37,42 @@ const RegistrationForm = ({ onRegistrationComplete }) => {
       const res = await fetch("http://localhost:5000/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userInfo }),
+        body: JSON.stringify(userInfo),
       });
+
+      // Check specifically for 400
+      if (res.status === 400) {
+        const err = await res.json();
+        alert(err.message);
+
+        onRegistrationComplete(formData);
+
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message);
+      }
+
       const data = await res.json();
 
       if (data.success) {
         incrementContacts(); // Increase the contact count
-
-
+        alert("Registered Successfully")
         // Move to WhatsApp verification step
         onRegistrationComplete(formData);
 
         setIsSubmitting(false);
         // alert("Payment successful! You can now download the file.");
       } else {
-        alert("Payment verification failed");
+        alert("Unexpected error during registration, please refresh and try again");
       }
     } catch (error) {
-      console.log(error);
+      console.error(error.message);
 
-      alert("Server error verifying payment");
+      alert(error.message); // <- show error to the user
     }
   }
   // Handle form submission
@@ -98,7 +114,8 @@ const RegistrationForm = ({ onRegistrationComplete }) => {
       const formattedFormData = {
         name: formatFullName(formData.name),
         email: formData.email,
-        phone: `${formData.countryCode}${formData.phone}`
+        phone: formData.phone,
+        countryCode: formData.countryCode,
       }
 
       // Simulate API call
@@ -106,7 +123,7 @@ const RegistrationForm = ({ onRegistrationComplete }) => {
       // setTimeout(() => {
       //   console.log('Registration data:', formattedFormData);
       //   incrementContacts(); // Increase the contact count
-        
+
 
 
       //   // Move to WhatsApp verification step

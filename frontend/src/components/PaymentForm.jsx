@@ -1,30 +1,52 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from "react";
 
 const PaymentForm = ({ userData, onPaymentSuccess, onBack }) => {
   const [paymentStatus, setPaymentStatus] = useState('ready'); // 'ready', 'processing', 'success', 'failed'
   const [paymentReference, setPaymentReference] = useState('');
+  const publicKey = "pk_test_4696b78b248df5ccee31c7b1a313d8dbfbc8ba1b"; // Replace with your own public key
+  const amount = 1000 * 100; // Amount in Kobo (₦5000)
+  const [isPaystackReady, setIsPaystackReady] = useState(false);
 
-  // Simulate Paystack integration
-  const initiatePayment = () => {
-    setPaymentStatus('processing');
-    
-    // Generate a reference number
-    const reference = `BALALAIKATV_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    setPaymentReference(reference);
+  useEffect(() => {
+    if (window.PaystackPop) {
+      console.log("Paystack ready!");
+      setIsPaystackReady(true);
+    } else {
+      console.error("Paystack script NOT found");
+    }
+  }, []);
 
-    // In a real app, this would integrate with Paystack
-    // For now, we'll simulate the payment process
-    console.log('Initiating payment for:', userData);
-    console.log('Payment reference:', reference);
-    console.log('Amount: ₦1,000');
+  const handleDownload = async (url) => {
+    try {
+      const res = await fetch("http://localhost:5000" + url); // no credentials
+      if (!res.ok) throw new Error("Network response not OK");
 
-    // Simulate payment processing time
-    setTimeout(() => {
-      // Simulate 90% success rate for demo
-      const paymentSuccess = Math.random() > 0.1;
-      
-      if (paymentSuccess) {
-        setPaymentStatus('success');
+      const blob = await res.blob();
+      const link = document.createElement("a");
+      link.href = window.URL.createObjectURL(blob);
+      link.download = "Untitled.png";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error("Download failed:", err);
+      alert("Failed to download file. Check server and file URL.");
+    }
+  };
+
+  // Async helper for verification
+  const verifyPayment = async (reference) => {
+    try {
+      const res = await fetch("http://localhost:5000/verify-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reference }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        alert("Payment successful! File will begin downloading automatically.");
+        setPaymentStatus("success")
         setTimeout(() => {
           onPaymentSuccess({
             reference,
@@ -32,10 +54,80 @@ const PaymentForm = ({ userData, onPaymentSuccess, onBack }) => {
             userData
           });
         }, 2000);
+        handleDownload(data.downloadUrl)
       } else {
-        setPaymentStatus('failed');
+        alert("Payment verification failed");
+        setPaymentStatus("failed")
       }
-    }, 3000);
+    } catch (error) {
+      console.log(error);
+      setPaymentStatus("failed")
+      alert("Server error verifying payment");
+    }
+  };
+
+  function paystackCallback(response) {
+    setPaymentReference(response.reference);
+    verifyPayment(response.reference).catch(err => {
+      console.error("Error in Paystack callback:", err);
+    });
+  }
+
+  const handlePay = () => {
+    if (!window.PaystackPop) {
+      alert("Paystack script not loaded yet.");
+      setPaymentStatus("failed")
+      return;
+    }
+    if (!userData.email) {
+      alert("Invalid email address. Please provide a valid email address");
+      onBack();
+      return;
+    } else {
+
+    }
+    if (!isPaystackReady) {
+      alert("Payment system still loading, please wait a second...");
+      setPaymentStatus("failed")
+      return;
+    }
+    try {
+      const handler = window.PaystackPop.setup({
+        key: publicKey,
+        email: userData.email,
+        amount: amount,
+        currency: "NGN",
+        metadata: {
+          custom_fields: [
+            {
+              display_name: "Email",
+              variable_name: "email",
+              value: userData.email,
+            },
+          ],
+        },
+        callback: paystackCallback,
+        onClose: function () { console.log("Payment closed."); setPaymentStatus("failed"); },
+      });
+      handler.openIframe();
+    } catch (err) {
+      console.error("Paystack setup error:", err);
+      alert("Unable to initialize payment. Please refresh and try again.");
+      setPaymentStatus("failed");
+    }
+  }
+
+  // Simulate Paystack integration
+  const initiatePayment = () => {
+    setPaymentStatus('processing');
+
+    // In a real app, this would integrate with Paystack
+    // For now, we'll simulate the payment process
+    console.log('Initiating payment for:', userData);
+    console.log('Amount: ₦1,000');
+
+    // Make payment
+    handlePay()
   };
 
   const retryPayment = () => {
@@ -48,7 +140,7 @@ const PaymentForm = ({ userData, onPaymentSuccess, onBack }) => {
       <div className="container mx-auto px-4">
         <div className="max-w-2xl mx-auto">
           <div className="bg-white rounded-2xl shadow-xl border p-8 text-center">
-            
+
             {/* Header */}
             <div className="mb-8">
               <div className="w-16 h-16 bg-blue-100 rounded-full mx-auto mb-4 flex items-center justify-center">

@@ -6,7 +6,6 @@ import Features from "./components/Features";
 import RegistrationForm from "./components/RegistrationForm";
 import WhatsAppVerification from "./components/WhatsAppVerification";
 import PaymentForm from "./components/PaymentForm";
-import PaystackPayment from "./components/DirectPayment";
 import SuccessPage from "./components/SuccessPage";
 import Footer from "./components/Footer";
 import { StatsProvider, useStats } from "./context/StatsContext";
@@ -23,13 +22,18 @@ const AppContent = () => {
     setCurrentStep("whatsapp");
   };
 
+  const maskString = (str) => {
+  if (str.length <= 6) return str; // too short to mask
+  const first = str.slice(0, 3);   // first 3 chars
+  const last = str.slice(-3);      // last 3 chars
+  const middle = "*".repeat(str.length - 6); // mask the middle
+  return first + middle + last;
+}
+
   const handleWhatsAppVerified = () => {
     setCurrentStep("payment");
   };
 
-  const handledirectPayment = () => {
-    setCurrentStep("direct-payment");
-  };
   const handlePaymentSuccess = (data) => {
     setPaymentData(data);
     setCurrentStep("success");
@@ -91,8 +95,8 @@ const AppContent = () => {
       {/* Show static sections only on registration step */}
       {currentStep === "registration" && (
         <>
-          <HowItWorks onDirectPayment={handledirectPayment} />
-          <Features />
+          <HowItWorks />
+          <Features onMaskString={maskString} />
         </>
       )}
 
@@ -103,11 +107,6 @@ const AppContent = () => {
           <RegistrationForm
             onRegistrationComplete={handleRegistrationComplete}
           />
-        )}
-
-        {/* Request user Email for direct payment */}
-        {currentStep === "direct-payment" && (
-          <PaystackPayment onBack={handleBackToWorks} />
         )}
 
         {currentStep === "whatsapp" && userData && (
