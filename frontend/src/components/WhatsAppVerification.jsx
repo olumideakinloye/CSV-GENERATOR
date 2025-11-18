@@ -5,7 +5,7 @@ const WhatsAppVerification = ({ userData, onVerified, onBack }) => {
   const [hasJoinedGroup, setHasJoinedGroup] = useState(false);
   
   // Replace this with your actual WhatsApp group invite link
-  const whatsappGroupLink = 'https://chat.whatsapp.com/InOeOOgsdrw5pQakudIItY';
+  const whatsappGroupLink = process.env.REACT_APP_WHATSAPPGROUPLINK;
   
   const handleJoinWhatsAppGroup = () => {
     // Open WhatsApp group directly
@@ -40,14 +40,16 @@ const WhatsAppVerification = ({ userData, onVerified, onBack }) => {
       // Simulate random success/failure for demo
       const verificationSuccess = Math.random() > 0.2; // 80% success rate for demo
       
-      if (verificationSuccess) {
-        setVerificationStatus('verified');
-        setTimeout(() => {
-          onVerified();
-        }, 1500);
-      } else {
-        setVerificationStatus('failed');
-      }
+      setVerificationStatus('verified');
+      setTimeout(() => {
+        onVerified();
+      }, 1500);
+
+      
+      // if (verificationSuccess) {
+      // } else {
+      //   setVerificationStatus('failed');
+      // }
     }, 3000); // 3 seconds to simulate checking
   };
 

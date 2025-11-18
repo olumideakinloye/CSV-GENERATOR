@@ -97,7 +97,7 @@ const Features = ({ onMaskString }) => {
 
   const getList = async () => {
     try {
-      const res = await fetch("http://localhost:5000/get-list");
+      const res = await fetch(`http://localhost:${process.env.REACT_APP_PORT}/get-list`);
 
       if (!res.ok) {
         throw new Error(`Error: ${res.status}`);

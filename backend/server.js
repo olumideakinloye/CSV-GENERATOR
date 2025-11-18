@@ -13,7 +13,9 @@ const dbURI = process.env.MONGO_URI;
 mongoose
   .connect(dbURI)
   .then((result) => {
-    app.listen(5000, () => console.log("Server running on port 5000"));
+    app.listen(process.env.PORT, () =>
+      console.log(`Server running on port ${process.env.PORT}`)
+    );
     console.log("connected to mongoDB");
   })
   .catch((err) => console.log(err));
@@ -28,7 +30,10 @@ app.post("/register", async (req, res) => {
   const { name, email, phone, countryCode } = req.body;
   const existing = await User.findOne({ phone, countryCode });
   if (existing) {
-    return res.status(400).json({ message: "You are a registered user." });
+    return res.json({
+      state: "Existing",
+      message: "You are a registered user.",
+    });
   }
 
   const user = new User({ name, email, phone, countryCode });
@@ -63,6 +68,7 @@ app.post("/verify-payment", async (req, res) => {
 
     if (data.status && data.data.status === "success") {
       res.json({ success: true, downloadUrl: "/files/Untitled.png" });
+      
     } else {
       res.status(400).json({ success: false, message: "Payment not verified" });
     }
@@ -74,15 +80,87 @@ app.post("/verify-payment", async (req, res) => {
 
 app.get("/get-list", async (req, res) => {
   try {
-    const list = await User.find().sort({ createdAt: 1 }).limit(20);
-    res.status(200).json({success: true, data: list})
+    const list = await User.find().sort({ createdAt: 1 }).limit(100);
+    res.status(200).json({ success: true, data: list });
   } catch (err) {
     console.error("Error fetching documents:", err);
     res.status(500).json({ success: false, message: "Server error" });
-  }  
-})
+  }
+});
 
-app.get("/files/Untitled.png", (req, res) => {
+app.get("/downloaded-users", async (req, res) => {
+  try {
+    const users = await User.countDocuments({ isDownloaded: true }).limit(100);
+    res.status(200).json({ success: true, data: users });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+app.get("/registered-users", async (req, res) => {
+  try {
+    const list = await User.countDocuments().limit(20);
+    res.status(200).json({ success: true, data: list });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+app.patch("/setRef", async (req, res) => {
+  try {
+    const { ref, phone } = req.body;
+
+    // Find & update
+    const updatedUser = await User.findOneAndUpdate(
+      { phone: phone },
+      { $set: { paymentRefrence: ref } },
+      { new: true, runValidators: true } // return updated document & validate against schema
+    );
+
+    // Handle case where no user is found
+    if (!updatedUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Send back success
+    res.json({
+      success: true,
+      message: "User updated successfully",
+    });
+  } catch (error) {
+    console.error(err);
+    res.status(500).json({ message: "Error updating" });
+  }
+});
+
+app.patch("/set-download-state", async (req, res) => {
+  try {
+    const { phone } = req.body;
+
+    // Find & update
+    const updatedUser = await User.findOneAndUpdate(
+      { phone: phone },
+      { $set: { isDownloaded: true } },
+      { new: true, runValidators: true } // return updated document & validate against schema
+    );
+
+    // Handle case where no user is found
+    if (!updatedUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Send back success
+    res.json({
+      success: true,
+      message: "User updated successfully",
+    });
+  } catch (error) {
+    console.error("Update error:", error);
+    res.json({ error: "Internal server error" });
+  }
+});
+
+app.get("/files/Untitled.png", async (req, res) => {
   const filePath = path.join(__dirname, "files", "Untitled.png");
   res.download(filePath, "Untitled.png");
 });

@@ -27,7 +27,18 @@ const userSchema = new Schema(
       trim: true,
       match: [/^[0-9]{10,15}$/, "Phone number must be 10 to 15 digits"],
     },
+
     countryCode: { type: String, required: true },
+
+    isDownloaded: {
+      type: Boolean,
+      default: false
+    },
+
+    paymentRefrence: {
+      type: String,
+      default: null
+    }
   },
   { timestamps: true }
 );

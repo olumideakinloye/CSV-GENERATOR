@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
+import { useStats } from '../context/StatsContext';
 
 const PaymentForm = ({ userData, onPaymentSuccess, onBack }) => {
   const [paymentStatus, setPaymentStatus] = useState('ready'); // 'ready', 'processing', 'success', 'failed'
   const [paymentReference, setPaymentReference] = useState('');
-  const publicKey = "pk_test_4696b78b248df5ccee31c7b1a313d8dbfbc8ba1b"; // Replace with your own public key
+  const publicKey = process.env.REACT_APP_PAYSTACK_PUBLIC_KEY; // Replace with your own public key
   const amount = 1000 * 100; // Amount in Kobo (₦5000)
   const [isPaystackReady, setIsPaystackReady] = useState(false);
+  const { incrementDownloads } = useStats();
 
   useEffect(() => {
     if (window.PaystackPop) {
@@ -18,7 +20,7 @@ const PaymentForm = ({ userData, onPaymentSuccess, onBack }) => {
 
   const handleDownload = async (url) => {
     try {
-      const res = await fetch("http://localhost:5000" + url); // no credentials
+      const res = await fetch(`http://localhost:${process.env.REACT_APP_PORT}` + url); // no credentials
       if (!res.ok) throw new Error("Network response not OK");
 
       const blob = await res.blob();
@@ -28,16 +30,58 @@ const PaymentForm = ({ userData, onPaymentSuccess, onBack }) => {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      incrementDownloads();
+      updateDownloadState();
     } catch (err) {
       console.error("Download failed:", err);
       alert("Failed to download file. Check server and file URL.");
     }
   };
 
+  const updateDownloadState = async () =>{
+    try {
+      const res = await fetch(`http://localhost:${process.env.REACT_APP_PORT}/set-download-state`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: userData.phone }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        console.log("Unable to update download state in database. Check internet connection");
+      }else{
+        if(data.success){
+          console.log(data.message);
+        }
+      }
+    } catch (error) {
+      console.error(error);      
+    }
+  }
+  const setRefrence = async (ref) => {
+    try {
+      const res = await fetch(`http://localhost:${process.env.REACT_APP_PORT}/setRef`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ref: ref, phone: userData.phone }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        console.log("Unable to save refrence in database. Check internet connection");
+      }else{
+        if(data.success){
+          console.log(data.message);
+          
+        }
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   // Async helper for verification
   const verifyPayment = async (reference) => {
     try {
-      const res = await fetch("http://localhost:5000/verify-payment", {
+      const res = await fetch(`http://localhost:${process.env.REACT_APP_PORT}/verify-payment`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ reference }),
@@ -54,7 +98,8 @@ const PaymentForm = ({ userData, onPaymentSuccess, onBack }) => {
             userData
           });
         }, 2000);
-        handleDownload(data.downloadUrl)
+        handleDownload(data.downloadUrl);
+        setRefrence(reference);
       } else {
         alert("Payment verification failed");
         setPaymentStatus("failed")

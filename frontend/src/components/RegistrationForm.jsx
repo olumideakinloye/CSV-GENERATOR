@@ -34,22 +34,11 @@ const RegistrationForm = ({ onRegistrationComplete }) => {
   //Register user info in database
   const registerUer = async (userInfo) => {
     try {
-      const res = await fetch("http://localhost:5000/register", {
+      const res = await fetch(`http://localhost:${process.env.REACT_APP_PORT}/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(userInfo),
       });
-
-      // Check specifically for 400
-      if (res.status === 400) {
-        const err = await res.json();
-        alert(err.message);
-
-        onRegistrationComplete(formData);
-
-        setIsSubmitting(false);
-        return;
-      }
 
       if (!res.ok) {
         const errorData = await res.json();
@@ -61,6 +50,14 @@ const RegistrationForm = ({ onRegistrationComplete }) => {
       if (data.success) {
         incrementContacts(); // Increase the contact count
         alert("Registered Successfully")
+        // Move to WhatsApp verification step
+        onRegistrationComplete(formData);
+
+        setIsSubmitting(false);
+        // alert("Payment successful! You can now download the file.");
+      }else if(data.state === "Existing"){
+        alert("You are a registered memeber");
+        
         // Move to WhatsApp verification step
         onRegistrationComplete(formData);
 
