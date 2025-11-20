@@ -31,11 +31,27 @@ export const StatsProvider = ({ children }) => {
     }));
   };
 
+  const setContacts = (contacts) => {
+    setStats(prev => ({
+      ...prev,
+      contacts: contacts
+    }));
+  }
+
+  const setDownloads = (downloads) => {
+    setStats(prev => ({
+      ...prev,
+      downloads: downloads
+    }));
+  }
+
   return (
     <StatsContext.Provider value={{
       stats,
       incrementContacts,
-      incrementDownloads
+      incrementDownloads,
+      setContacts,
+      setDownloads
     }}>
       {children}
     </StatsContext.Provider>

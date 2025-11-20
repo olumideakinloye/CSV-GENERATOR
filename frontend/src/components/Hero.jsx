@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useStats } from '../context/StatsContext';
 
-const Hero = ({ stats = { privacy: 100 } }) => {
-  const [contacts, setContacts] = useState(0);
-  const [downloads, setDownloads] = useState(0);
+const Hero = ({ stats = { contacts: 0, downloads: 0, privacy: 100 } }) => {
+  const { setDownloads } = useStats();
+  const { setContacts } = useStats();
 
   const floorTo10 = (num) => Math.floor(num / 10) * 10
 
@@ -31,9 +32,9 @@ const Hero = ({ stats = { privacy: 100 } }) => {
           throw new Error("Failed to fetch users");
         }
         const data = await res.json();
-        if(data.data > 10){
+        if (data.data > 10) {
           setContacts(floorTo10(data.data));
-        }else{
+        } else {
           setContacts(data.data);
         }
       } catch (err) {
@@ -58,11 +59,11 @@ const Hero = ({ stats = { privacy: 100 } }) => {
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto mb-16">
           <div className="bg-white rounded-xl p-8 shadow-lg">
-            <div className="text-4xl font-bold text-purple-600 mb-2">{contacts > 10 ? contacts + "+" : contacts}</div>
+            <div className="text-4xl font-bold text-purple-600 mb-2">{stats.contacts > 10 ? stats.contacts + "+" : stats.contacts}</div>
             <div className="text-gray-600">Registered Contacts</div>
           </div>
           <div className="bg-white rounded-xl p-8 shadow-lg">
-            <div className="text-4xl font-bold text-blue-600 mb-2">{downloads > 10 ? downloads + "+" : downloads}</div>
+            <div className="text-4xl font-bold text-blue-600 mb-2">{stats.downloads > 10 ? stats.downloads + "+" : stats.downloads}</div>
             <div className="text-gray-600">Downloads</div>
           </div>
           <div className="bg-white rounded-xl p-8 shadow-lg">
